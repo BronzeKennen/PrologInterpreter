@@ -21,4 +21,4 @@ tokenize (x:xs) = if isDigit x
 buffer :: String -> String-- String -> Token 
 buffer "" = ""
 buffer (' ':xs) = buffer ""
-buffer (x:xs) =  buffer xs ++ [x]
+buffer (x:xs) =  [x] ++ buffer xs 
