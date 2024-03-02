@@ -11,13 +11,17 @@ data TokenType
   | CommaOperator -- .
   | Terminator
   | TailOperator
-  | PredOperator
+  | PredOperator 
   | LeftParen
   | RightParen
   | LeftBracket
   | RightBracket
   deriving (Show,Eq)
 data Token = Token TokenType (Maybe String) deriving (Show)
+
+tokenize2 (x:xs) = [tokenize (x:xs)] ++ [(tokenize ys)]
+  where
+    (y:ys)= dropWhile (/= '.') xs
 
 tokenize :: String -> [Token]-- String -> Token
 tokenize [] = []
@@ -27,7 +31,7 @@ tokenize (x:xs)
   | isUpper x || isLower x = Token Identifier (Just (buffer Identifier (x:xs))) : tokenize remaining 
   | isDigit x = Token Int (Just (buffer Int (x:xs))) : tokenize remaining
   | x == ',' = Token CommaOperator Nothing: tokenize xs 
-  | x == '.' = Token Terminator Nothing : tokenize xs 
+  | x == '.' = [Token Terminator Nothing] 
   | x == '|' = Token TailOperator Nothing :tokenize xs 
   | x == '[' = Token LeftBracket Nothing : tokenize xs
   | x == ']' = Token RightBracket Nothing : tokenize xs
