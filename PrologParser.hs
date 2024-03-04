@@ -64,7 +64,7 @@ parse :: [[Token]] -> [ASTNode]
 parse [] = []
 parse (x:xs)
     -- If token is a rule, parse it by utilizing parseAllArgs
-    | isRule x = Rule (predInit first) (parseAllArgs ([Token LeftParen Nothing] ++ second ++ [Token RightParen Nothing]) 0) : parse xs
+    | isRule x = Rule (predInit first) (parseAllArgs (second ++ [Token RightParen Nothing]) 1) : parse xs
     -- Else if a token is simply a fact, parse it using predInit
     | otherwise = Fact (predInit x): parse xs
     where (first, second) = splitAt (indexOf PredOperator x) x
@@ -79,7 +79,7 @@ indexOf x (y:ys)
 predInit :: [Token] -> ASTNode
 predInit (x:xs)
     | getTokenType x == LeftParen || getTokenType x == RightParen = predInit xs -- Ignore left right parenthesis
-    | getTokenType x == Int = Predicate (getIdentifier x) []                    -- Integers parsing: Predicate "Int" []
+    | getTokenType x == Int || (getTokenType x == Lower && getTokenType (head xs) /= LeftParen) = Predicate (getIdentifier x) []                    -- Integers parsing: Predicate "Int" []
     | getTokenType x == Upper = PredVariable (getIdentifier x)                  -- Variables parsing: PRedVariable "X"
     | getTokenType x == Lower = Predicate (getIdentifier x) (parseAllArgs xs 0) -- Predicates parsing: Predicate "Name" [Arguements]
 
@@ -89,7 +89,7 @@ parseAllArgs (x:xs) n
     | getTokenType x == LeftParen = parseAllArgs xs (n+1)   -- Raise parenthesis counter when entering predicates inside predicates
     | getTokenType x == RightParen && n == 1 = []           -- If at the end arguement, return
     | getTokenType x == RightParen = parseAllArgs xs (n-1)  -- Loweer parenthesis counter when exiting predicates inside predicates
-    | n == 1 && getTokenType x == Int = Predicate (getIdentifier x) [] : parseAllArgs xs n                      -- Parse ints
+    | n == 1 && getTokenType x == Int || (getTokenType x == Lower && getTokenType (head xs) /= LeftParen) = Predicate (getIdentifier x) [] : parseAllArgs xs n                      -- Parse ints
     | n == 1 && getTokenType x == Upper = PredVariable (getIdentifier x) : parseAllArgs xs n                    -- Parse vars
     | n == 1 && getTokenType x == Lower = Predicate (getIdentifier x) (parseAllArgs xs 0) : parseAllArgs xs n   -- Parse pred
     | otherwise = parseAllArgs xs n     -- Used to ignore commas
@@ -108,3 +108,6 @@ parseAllArgs (x:xs) n
 --      ],
 --        Fact (Predicate "b" [Predicate "15" []])
 -- ] 
+
+-- b(mike).
+-- Fact (Predicate "b" [Predicate "mike" []])
