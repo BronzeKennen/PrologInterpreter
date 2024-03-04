@@ -23,7 +23,9 @@ data Token = Token TokenType (Maybe String) deriving (Show)
 -- Each list of tokens corresponds to a single statement
 tokenizeInput :: String -> [[Token]]
 tokenizeInput [] = []
-tokenizeInput (x:xs) = tokenize (x:xs) : tokenizeInput ys
+tokenizeInput (x:xs) = if(length (tokenize (x:xs)) == 0) 
+                       then tokenizeInput xs
+                       else tokenize(x:xs) : tokenizeInput ys 
   where
     (y:ys)= dropWhile (/= '.') xs
 

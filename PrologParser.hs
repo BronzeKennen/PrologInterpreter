@@ -36,15 +36,22 @@ checkIsValid (x:xs)
     | factIsValid x 0 = checkIsValid xs
     | otherwise = False
 
+-- Handle case where '.' is missing somewhere
+terminatorAbsenceCheck [x] = True
+terminatorAbsenceCheck (x:xs) = if (getTokenType x /= Terminator) 
+                                then False 
+                                else True
 -- Check if the syntax of the Fact is valid
 factIsValid :: [Token] -> Int -> Bool
-factIsValid [Token Terminator Nothing] n
-    | n == 0 = True
+factIsValid [x] n  
+    | (n == 0 && getTokenType x == Terminator) = True
     | otherwise = False
+
 -- Facts are invalid if the contain variables, wrongly placed commas or wrong parenthesis pairs
 factIsValid (x:y:xs) n
     -- Check if parenthesis are well balanced
     | getTokenType x == LeftParen = factIsValid (y:xs) (n+1)
+    | (getTokenType x == RightParen && n == 1) = terminatorAbsenceCheck (y:xs)
     | getTokenType x == RightParen = factIsValid (y:xs) (n-1)
     -- Lower and upper case strings are acceptable
     | getTokenType x == Lower || getTokenType x == Upper = factIsValid (y:xs) n
