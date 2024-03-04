@@ -56,11 +56,11 @@ factIsValid (x:y:xs) n
     | (getTokenType x == RightParen && n == 1) = terminatorAbsenceCheck (y:xs)
     | getTokenType x == RightParen = factIsValid (y:xs) (n-1)
     -- Lower and upper case strings are acceptable
-    | getTokenType x == Lower = factIsValid (y:xs) n
+    | getTokenType x == Lower || getTokenType x == Upper = factIsValid (y:xs) n
     -- Integers are acceptable
     | getTokenType x == Int = factIsValid (y:xs) n
     -- After a comma, an integer or a string must follow
-    | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower ) = factIsValid (y:xs) n
+    | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = factIsValid (y:xs) n
     | otherwise = False
 
 -- Check if the syntax of the Rule is valid
