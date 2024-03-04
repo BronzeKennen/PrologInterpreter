@@ -1,14 +1,14 @@
 module PrologLexer where
-import Data.Char (isDigit) 
-import Data.Char (isLower)
-import Data.Char (isUpper)
-import Data.Char (isAlphaNum)
+import Data.Char (isDigit, isLower, isUpper, isAlphaNum) 
 import Data.String
 import Data.Maybe
+
+-- These are all the available tokens
 data TokenType
   = Int
-  | Identifier
-  | CommaOperator -- .
+  | Lower
+  | Upper
+  | CommaOperator
   | Terminator
   | TailOperator
   | PredOperator 
@@ -19,16 +19,21 @@ data TokenType
   deriving (Show,Eq)
 data Token = Token TokenType (Maybe String) deriving (Show)
 
-tokenize2 (x:xs) = [tokenize (x:xs)] ++ [(tokenize ys)]
+-- Tokenize the input file. The lexer produces a list containing lists of tokens
+-- Each list of tokens corresponds to a single statement
+tokenizeInput :: String -> [[Token]]
+tokenizeInput [] = []
+tokenizeInput (x:xs) = tokenize (x:xs) : tokenizeInput ys
   where
     (y:ys)= dropWhile (/= '.') xs
 
-tokenize :: String -> [Token]-- String -> Token
+-- Tokenize a statement
+tokenize :: String -> [Token]
 tokenize [] = []
-
 tokenize (':':'-':xs) = Token PredOperator Nothing : tokenize xs 
 tokenize (x:xs)
-  | isUpper x || isLower x = Token Identifier (Just (buffer Identifier (x:xs))) : tokenize remaining 
+  | isLower x = Token Lower (Just (buffer Lower (x:xs))) : tokenize remaining 
+  | isUpper x = Token Upper (Just (buffer Upper (x:xs))) : tokenize remaining 
   | isDigit x = Token Int (Just (buffer Int (x:xs))) : tokenize remaining
   | x == ',' = Token CommaOperator Nothing: tokenize xs 
   | x == '.' = [Token Terminator Nothing] 
@@ -41,11 +46,10 @@ tokenize (x:xs)
   where
     remaining = dropWhile isAlphaNum xs
 
-
 buffer :: TokenType -> String -> String-- String -> Token 
 buffer _ ""  = ""
 buffer t (x:xs) 
-  | t == Int || t == Identifier = 
+  | t == Int || t == Lower || t == Upper = 
     if not (isAlphaNum x) 
       then buffer t ""
-      else [x] ++ buffer t xs
+      else x : buffer t xs

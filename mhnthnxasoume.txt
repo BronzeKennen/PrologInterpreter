@@ -1,1 +1,0 @@
-[Token Identifier (Just "b"),Token LeftParen Nothing,Token Int (Just "15"),Token RightParen Nothing,Token Terminator Nothing]
