@@ -11,23 +11,26 @@ main = do
   -- Apply lexer to file to get the tokens
   let tokens = tokenizeInput file_content
   
+  let parsed = parse tokens
   -- Check if the given program has the correct syntax
   let isValid = checkIsValid tokens
   if not isValid then die "ERROR: Program's syntax is not correct. Exiting..."
   
   else do
-    putStr "----- PARSED TOKENS -----\n\n"
-    mapM_ print tokens
-    let parsed = parse tokens
-    putStr "-----These are the parsed tokens-----\n\n"
-    mapM_ print parsed
-    userInput
+    userInput parsed 
 
--- apo edw kai pera mike >:( gia na peraseis to file tha prepei na 
--- to grapseis me to pou treksei to programma :)
--- kaneis ./main kai molis treksei grafeis to file name.
-userInput = do
+userInput:: [a0] -> IO b
+userInput parsed = do
   inp <- getLine
-  if (inp == "halt.") then die "Program Exit." else do 
-    putStrLn inp
-    userInput
+  if (inp == "halt.") then die "Program Exit." 
+  else do 
+    let tokenedInp = tokenizeInput inp
+    let validity = checkIsValid tokenedInp
+    if (validity == False) then putStr "Invalid input.\n"
+    else do
+      let parsedInp = parse tokenedInp 
+      -- s(X)),Y). parsed
+      print "input:\n"
+      print parsedInp
+  userInput parsed
+      

@@ -1,4 +1,5 @@
-- O Lexer crasharei an to teleutaio statement pou den teleiwnei me '.'
-- Syntax checks gia rules
 - Ti kanoume me tis listes? px [1,2,3] h [1|[2,3]] ?
+- Υλοποιηση Most General Unifier:
+    Συγκρινε πρωτα predicate name (p(....) p(....))
+    Συγκρινε αν εχουν ιδιο αριθμο στοιχειων (πχ /3 με /3 κατηγορηματα)
 "Στην εργασία αυτή απαγορεύεται η χρήση external modules της Haskell."
