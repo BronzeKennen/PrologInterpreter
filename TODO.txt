@@ -1,5 +1,4 @@
-- O Lexer crasharei an o xrhsths dwsei statement pou den teleiwnei me '.'
+- O Lexer crasharei an to teleutaio statement pou den teleiwnei me '.'
 - Syntax checks gia rules
-- Ti kanoume me ta atoms? px a(mike) :- a(swthrhs). ?
 - Ti kanoume me tis listes? px [1,2,3] h [1|[2,3]] ?
 "Στην εργασία αυτή απαγορεύεται η χρήση external modules της Haskell."
