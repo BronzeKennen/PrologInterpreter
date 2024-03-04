@@ -1,10 +1,13 @@
 import PrologLexer
 import PrologParser
+import PatternMatch
 import System.Exit
+import System.IO
 
 main = do
   -- Get file from input
-  file_content <- getContents
+  filename <- getLine
+  file_content <- readFile filename
   -- Apply lexer to file to get the tokens
   let tokens = tokenizeInput file_content
   
@@ -13,13 +16,18 @@ main = do
   if not isValid then die "ERROR: Program's syntax is not correct. Exiting..."
   
   else do
-    -- Print in a pretty way :D
-    putStr "\n-----These are the tokens-----\n"
+    putStr "----- PARSED TOKENS -----\n\n"
     mapM_ print tokens
-
-    putStr "\n"
-
-    -- Print in a pretty way :D
     let parsed = parse tokens
-    putStr "-----These are the parsed tokens-----\n"
+    putStr "-----These are the parsed tokens-----\n\n"
     mapM_ print parsed
+    userInput
+
+-- apo edw kai pera mike >:( gia na peraseis to file tha prepei na 
+-- to grapseis me to pou treksei to programma :)
+-- kaneis ./main kai molis treksei grafeis to file name.
+userInput = do
+  inp <- getLine
+  if (inp == "halt.") then die "Program Exit." else do 
+    putStrLn inp
+    userInput
