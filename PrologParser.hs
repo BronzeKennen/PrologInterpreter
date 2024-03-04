@@ -31,7 +31,7 @@ checkIsValid :: [[Token]] -> Bool
 checkIsValid [] = True
 checkIsValid (x:xs)
     -- Before checking if a token is valid make sure that it doesn't start with a variable
-    | getTokenType (head x) == Upper = False
+    | getTokenType (head x) /= Lower = False
     | isRule x && (ruleInitCheck first 0)&& ruleIsValid second 0 = checkIsValid xs
     | factIsValid x 0 = checkIsValid xs
     | otherwise = False
@@ -56,11 +56,11 @@ factIsValid (x:y:xs) n
     | (getTokenType x == RightParen && n == 1) = terminatorAbsenceCheck (y:xs)
     | getTokenType x == RightParen = factIsValid (y:xs) (n-1)
     -- Lower and upper case strings are acceptable
-    | getTokenType x == Lower || getTokenType x == Upper = factIsValid (y:xs) n
+    | getTokenType x == Lower = factIsValid (y:xs) n
     -- Integers are acceptable
     | getTokenType x == Int = factIsValid (y:xs) n
     -- After a comma, an integer or a string must follow
-    | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = factIsValid (y:xs) n
+    | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower ) = factIsValid (y:xs) n
     | otherwise = False
 
 -- Check if the syntax of the Rule is valid
@@ -72,14 +72,14 @@ operatorAbsenceCheck (x:xs) = if (getTokenType x == CommaOperator || getTokenTyp
                               else False 
     --might add terminator to remove terminatoAbsenceCheck later
 
-ruleInitCheck [x] n = if (n == 0 && (getTokenType x) == RightParen) then True else False
+ruleInitCheck [x] n = if (n == 0 && (getTokenType x) == PredOperator) then True else False
 ruleInitCheck (x:y:xs) n
     | getTokenType x == LeftParen = ruleInitCheck (y:xs) (n+1)
     | getTokenType x == RightParen = ruleInitCheck (y:xs) (n-1)
     | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = ruleInitCheck (y:xs) n
-    | getTokenType x == Lower || getTokenType x == Upper = factIsValid (y:xs) n
+    | getTokenType x == Lower || getTokenType x == Upper = ruleInitCheck (y:xs) n
     -- Integers are acceptable
-    | getTokenType x == Int = factIsValid (y:xs) n
+    | getTokenType x == Int = ruleInitCheck (y:xs) n
     | otherwise = False
 
 ruleIsValid :: [Token] -> Int -> Bool
