@@ -32,9 +32,11 @@ checkIsValid [] = True
 checkIsValid (x:xs)
     -- Before checking if a token is valid make sure that it doesn't start with a variable
     | getTokenType (head x) == Upper = False
-    | isRule x && ruleIsValid x = checkIsValid xs
+    | isRule x && (ruleInitCheck first 0)&& ruleIsValid second 0 = checkIsValid xs
     | factIsValid x 0 = checkIsValid xs
     | otherwise = False
+    where (first, second) = splitAt (indexOf PredOperator x) x
+
 
 -- Handle case where '.' is missing somewhere
 terminatorAbsenceCheck [x] = True
@@ -63,9 +65,33 @@ factIsValid (x:y:xs) n
 
 -- Check if the syntax of the Rule is valid
 -- FOR NOW IGNORE RULES
-ruleIsValid :: [Token] -> Bool
-ruleIsValid x = True
 
+-- based on call check for pred operator, comma, or terminator
+operatorAbsenceCheck (x:xs) = if (getTokenType x == CommaOperator || getTokenType x == Terminator) 
+                              then True
+                              else False 
+    --might add terminator to remove terminatoAbsenceCheck later
+
+ruleInitCheck [x] n = if (n == 0 && (getTokenType x) == RightParen) then True else False
+ruleInitCheck (x:y:xs) n
+    | getTokenType x == LeftParen = ruleInitCheck (y:xs) (n+1)
+    | getTokenType x == RightParen = ruleInitCheck (y:xs) (n-1)
+    | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = ruleInitCheck (y:xs) n
+    | getTokenType x == Lower || getTokenType x == Upper = factIsValid (y:xs) n
+    -- Integers are acceptable
+    | getTokenType x == Int = factIsValid (y:xs) n
+    | otherwise = False
+
+ruleIsValid :: [Token] -> Int -> Bool
+ruleIsValid [] _ = True
+ruleIsValid (x:y:xs) n 
+    | getTokenType x == LeftParen = ruleIsValid (y:xs) (n+1)
+    | (getTokenType x == RightParen && n == 1) = operatorAbsenceCheck (y:xs) 
+    | getTokenType x == Upper && n > 0= ruleIsValid (y:xs) n
+    | getTokenType x == Lower || getTokenType x == Upper = ruleIsValid (y:xs) n
+    | getTokenType x == RightParen = ruleIsValid (y:xs) (n-1)
+    | getTokenType x == Int = ruleIsValid (y:xs) n
+    | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = ruleIsValid (y:xs) n
 -- Parse the given tokens and create the Abstract Syntax Tree
 parse :: [[Token]] -> [ASTNode]
 parse [] = []

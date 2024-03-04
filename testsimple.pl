@@ -1,4 +1,4 @@
-a(s, swthrhs) :- b(42, 88), test(X).
+alvanos(s, swthrhs) :- b(42, 88), test(X).
 a(X) :- b(Y).
 a(X) :- a(s(X)), b(Y).
 a(X) :- a(s(X)), b(s(0)).
