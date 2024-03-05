@@ -3,7 +3,7 @@ interpreter:
 
 run:
 	ghc -o main main.hs
-	./main < testsimple.pl
+	./main
 
 all: run clean
 

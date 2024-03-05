@@ -1,7 +1,6 @@
 module PrologParser where
 import PrologLexer
 import Data.String
-import Control.Arrow (Arrow(second))
 
 -- ASTNode data type
 data ASTNode
