@@ -34,17 +34,21 @@ unify (Predicate x xargs) (Predicate y yargs)
     | x /= y || length xargs /= length yargs = [(PredVariable "FAIL", PredVariable "FAIL")]
     | otherwise = fillSubstitutionSet xargs yargs
 
--- Apo edw kai meta ksekinaei to Step 5 apo to site
--- -- Find substitution set and return it
+-- if substitutions are more than 1 we add them here
 fillSubstitutionSet [] [] = []
 fillSubstitutionSet (x:xs) (y:ys) 
     | length (unified) == 0 = []
-    -- | length (unify x y) /= 0 = unify x y ++ fillSubstitutionSet xs ys
     | length (unified) /= 0 = unified ++ fillSubstitutionSet (replaceOccurence unified xs) (replaceOccurence unified ys)
     | otherwise = [(PredVariable "FAIL", PredVariable "FAIL")]
     where unified  = unify x y
 
+-- replace every occurence of a variable with the atom that we unified it with
 replaceOccurence _ [] = []
+
+replaceOccurence [(var,atom)] (Predicate s (x:xs):ys) = [Predicate s (replaceOccurence [(var,atom)] (x:xs))]
+
+replaceOccurence [(var,atom)] (Predicate x [] : xs) = Predicate x []: replaceOccurence [(var,atom)] xs 
+
 replaceOccurence [(var,atom)] (x:xs)
     | x == var = atom: replaceOccurence [(var,atom)] xs
     | otherwise = x: replaceOccurence [(var,atom)] xs

@@ -1,6 +1,7 @@
 import PrologLexer
 import PrologParser
 import PatternMatch
+import TopDownEval
 import System.Exit
 import System.IO
 
@@ -50,6 +51,10 @@ main = do
   putStr "MGU9"
   print mgu
                    
+  let mgu = unify (Predicate "p" [PredVariable "X", PredVariable "U"]) (Predicate "p" [Predicate "a" [], Predicate "f" [PredVariable "X"]])
+
+  putStr "MGU10"
+  print mgu
 
 
 
