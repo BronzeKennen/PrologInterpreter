@@ -45,6 +45,12 @@ main = do
   putStr "MGU8: "
   print mgu
 
+  -- paradeigma koubarakh
+  let mgu = unify (Predicate "p" [PredVariable "X", Predicate "b" [], PredVariable "Y", PredVariable "W", PredVariable "U"]) (Predicate "p" [Predicate "a" [], PredVariable "Y", PredVariable "Z", PredVariable "X", Predicate "f" [PredVariable "X"]])
+  putStr "MGU9"
+  print mgu
+                   
+
 
 
 -- main = do

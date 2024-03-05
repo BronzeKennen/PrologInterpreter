@@ -8,7 +8,7 @@ data ASTNode
     | Rule ASTNode [ASTNode]
     | Predicate String [ASTNode]
     | PredVariable String
-    deriving(Show)
+    deriving(Show, Eq)
 
 -- Get the type of a token
 getTokenType :: Token -> TokenType

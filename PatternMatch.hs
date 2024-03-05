@@ -32,11 +32,23 @@ unify (Predicate y yargs) (PredVariable x) = unify (PredVariable x) (Predicate y
 -- Otherwise, find substitution set and return it
 unify (Predicate x xargs) (Predicate y yargs)
     | x /= y || length xargs /= length yargs = [(PredVariable "FAIL", PredVariable "FAIL")]
---     | otherwise = findSubSet xargs yargs []
+    | otherwise = fillSubstitutionSet xargs yargs
 
 -- Apo edw kai meta ksekinaei to Step 5 apo to site
-
 -- -- Find substitution set and return it
+fillSubstitutionSet [] [] = []
+fillSubstitutionSet (x:xs) (y:ys) 
+    | length (unified) == 0 = []
+    -- | length (unify x y) /= 0 = unify x y ++ fillSubstitutionSet xs ys
+    | length (unified) /= 0 = unified ++ fillSubstitutionSet (replaceOccurence unified xs) (replaceOccurence unified ys)
+    | otherwise = [(PredVariable "FAIL", PredVariable "FAIL")]
+    where unified  = unify x y
+
+replaceOccurence _ [] = []
+replaceOccurence [(var,atom)] (x:xs)
+    | x == var = atom: replaceOccurence [(var,atom)] xs
+    | otherwise = x: replaceOccurence [(var,atom)] xs
+
 -- findSubSet :: [ASTNode] -> [ASTNode] -> [(ASTNode, ASTNode)] -> [(ASTNode, ASTNode)]
 -- findSubSet (x:xs) (y:ys) currentSet = 
 
