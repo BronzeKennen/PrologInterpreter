@@ -12,7 +12,8 @@ import PrologLexer
 unify :: ASTNode -> ASTNode -> [(ASTNode, ASTNode)]
 -- When unify will be called from the main program, both of the arguements will be Facts (maybe not idk)
 unify (Fact x) (Fact y) = unify x y
-
+-- pattern match a rule head
+unify (Fact x) (Rule y _) = unify x y 
 -- Case: Unify 2 variables
 -- If they are the same variable, MGU is empty. Else, assign y to x 
 unify (PredVariable x) (PredVariable y)
