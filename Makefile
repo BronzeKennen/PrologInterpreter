@@ -11,4 +11,4 @@ all: run clean
 .PHONY: clean
 
 clean:
-	rm main *.o *.hi
+	rm main mgutests *.o *.hi
