@@ -9,9 +9,10 @@ findMatches query (pred:predicates) = initializeEval query pred
 --step 1,2,3
 initializeEval query (Rule x (r:reqs)) =
     --step 5,6 check for unification
+                --  G
     if (unify query r) != [(PredVariable "FAIL", PredVariable "FAIL")] 
-                            --G  GS   VL SS
-        then evaluate query [(r:reqs),[],[]] --will need to try and unify with all
+                    -- C     GS   VL SS
+        then evaluate query [reqs,[],[]] --will need to try and unify with all
                                              --rule requirements
         else False
 
