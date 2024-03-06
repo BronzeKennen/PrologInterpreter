@@ -65,11 +65,13 @@ factIsValid (x:y:xs) n
     | otherwise = False
     where (r:rest) = dropWhile (\z -> getTokenType z /= RightBracket) xs
 
+--Check if tail operator is used correctly
 tailCheck (x:y:xs)
     | (getTokenType x /= Upper) = False
     | (getTokenType x == Upper) && (getTokenType y /= RightBracket) = False
     | otherwise = True
 
+--Check for list Validity
 listIsValid (x:y:xs) n m 
     | (getTokenType x == Upper 
         || getTokenType x == Lower 
@@ -131,6 +133,13 @@ indexOf x (y:ys)
     | x /= getTokenType y = indexOf x ys +1
     | otherwise = 1
 
+listPreds (x:xs)
+    | getTokenType x == TailOperator = listPreds xs
+    | getTokenType x == LeftParen || getTokenType x == RightParen = listPreds xs -- Ignore left right parenthesis
+    | getTokenType x == Int || (getTokenType x == Lower && getTokenType (head xs) /= LeftParen) = Predicate (getIdentifier x) [] : listPreds xs                    -- Integers parsing: Predicate "Int" []
+    | getTokenType x == Upper = PredVariable (getIdentifier x) : listPreds xs                  -- Variables parsing: PRedVariable "X"
+    | getTokenType x == Lower = Predicate (getIdentifier x) (parseAllArgs xs 0): listPreds xs -- Predicates parsing: Predicate "Name" [Arguements]
+    | getTokenType x == RightBracket = []
 -- Parse a predicate to an ASTNode
 predInit :: [Token] -> ASTNode
 predInit (x:xs)
@@ -138,7 +147,6 @@ predInit (x:xs)
     | getTokenType x == Int || (getTokenType x == Lower && getTokenType (head xs) /= LeftParen) = Predicate (getIdentifier x) []                    -- Integers parsing: Predicate "Int" []
     | getTokenType x == Upper = PredVariable (getIdentifier x)                  -- Variables parsing: PRedVariable "X"
     | getTokenType x == Lower = Predicate (getIdentifier x) (parseAllArgs xs 0) -- Predicates parsing: Predicate "Name" [Arguements]
-
 -- Parse all arguements of a predicate
 parseAllArgs :: [Token] -> Int -> [ASTNode]
 parseAllArgs (x:xs) n
@@ -148,8 +156,10 @@ parseAllArgs (x:xs) n
     | n == 1 && getTokenType x == Int || (getTokenType x == Lower && getTokenType (head xs) /= LeftParen) = Predicate (getIdentifier x) [] : parseAllArgs xs n                      -- Parse ints
     | n == 1 && getTokenType x == Upper = PredVariable (getIdentifier x) : parseAllArgs xs n                    -- Parse vars
     | n == 1 && getTokenType x == Lower = Predicate (getIdentifier x) (parseAllArgs xs 0) : parseAllArgs xs n   -- Parse pred
+    --list is gonna be parsed as predicate "[]" and list items are the [ASTNode] argument
+    | getTokenType x == LeftBracket = Predicate "[]" (listPreds xs): parseAllArgs rest n
     | otherwise = parseAllArgs xs n     -- Used to ignore commas
-
+    where rest = dropWhile (\z -> getTokenType z /= RightBracket) xs
 -- MALAKA OUTE MIA EKFWNHSH DEN MPOROUN NA GRAPSOUN SWSTA
 -- AYTO EINAI TO SWSTO OUTPUT TOU PARSER. TO BRHKA STO DISC
 
