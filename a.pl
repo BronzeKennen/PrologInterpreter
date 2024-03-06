@@ -1,4 +1,3 @@
-p(1).
 p(s(s(X)),Y).
 a(s, swthrhs) :- b(42, 88), test(X).
 a(X) :- b(Y).

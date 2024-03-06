@@ -1,32 +1,36 @@
 import PrologLexer
 import PrologParser
 import PatternMatch
--- import TopDownEval
+import TopDownEval
 import System.Exit
 import System.IO
 
 main = do
+  putStr "\nEnter a prolog file or enter \"halt.\" to exit: "
+  hFlush stdout
   -- Get file from input
   filename <- getLine
-  file_content <- readFile filename
-  -- Apply lexer to file to get the tokens
-  let tokens = tokenizeInput file_content
--- 
-  let parsed = parse tokens
-  -- Check if the given program has the correct syntax
-  let isValid = checkIsValid tokens
-  if not isValid then die "ERROR: Program's syntax is not correct. Exiting..."
--- 
+  if filename == "halt." then die "Program Exit."
   else do
-    print parsed
-    -- userInput parsed
+    file_content <- readFile filename
+    -- Apply lexer to file to get the tokens
+    let tokens = tokenizeInput file_content
+  -- 
+    let parsed = parse tokens
+    -- Check if the given program has the correct syntax
+    let isValid = checkIsValid tokens
+    if not isValid then die "ERROR: Program's syntax is not correct. Exiting..."
+  -- 
+    else do
+      mapM_ print parsed
+      userInput parsed
 -- 
 -- userInput:: [a0] -> IO b
 -- Read user input
 userInput :: [ASTNode] -> IO b
 userInput parsed = do
-  putStr "\nI'm trying to match p(s(s(X)),Y): "
-  print (head parsed)
+  putStr "\nEnter a query or enter \"halt.\" to exit: "
+  hFlush stdout
   -- If user inputs 'halt.', exit the program
   inp <- getLine
   if inp == "halt." then die "Program Exit."
@@ -38,7 +42,12 @@ userInput parsed = do
     if not validity then putStr "Invalid input.\n"
     else do
       let parsedInp = head (parse tokenedInp)
-      let mgu = unify parsedInp (head parsed)
-      mapM_ print mgu
+      -- print "User query"
+      -- print parsedInp
+      -- print "last"
+      -- print (last parsed)
+      let answer = topDownEvaluate parsedInp parsed
+      putStr "Answer is: "
+      mapM_ print answer
   userInput parsed
 -- 
