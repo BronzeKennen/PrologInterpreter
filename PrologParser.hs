@@ -31,8 +31,8 @@ checkIsValid [] = True
 checkIsValid (x:xs)
     -- Before checking if a token is valid make sure that it doesn't start with a variable
     | getTokenType (head x) /= Lower = False
-    | isRule x && (ruleInitCheck first 0)&& ruleIsValid second 0 = checkIsValid xs
-    | factIsValid x 0 = checkIsValid xs
+    | isRule x && (ruleInitCheck first 0 0)&& (ruleIsValid second 0 0)  = checkIsValid xs
+    | factIsValid x 0 0 = checkIsValid xs
     | otherwise = False
     where (first, second) = splitAt (indexOf PredOperator x) x
 
@@ -43,30 +43,32 @@ terminatorAbsenceCheck (x:xs) = if (getTokenType x /= Terminator)
                                 then False 
                                 else True
 -- Check if the syntax of the Fact is valid
-factIsValid :: [Token] -> Int -> Bool
-factIsValid [x] n  
-    | (n == 0 && getTokenType x == Terminator) = True
+factIsValid :: [Token] -> Int -> Int -> Bool
+factIsValid [x] n m
+    | (n == 0 && m == 0 && getTokenType x == Terminator) = True
     | otherwise = False
 
 -- Facts are invalid if the contain variables, wrongly placed commas or wrong parenthesis pairs
-factIsValid (x:y:xs) n
+factIsValid (x:y:xs) n m
     -- Check if parenthesis are well balanced
-    | getTokenType x == LeftParen = factIsValid (y:xs) (n+1)
+    | getTokenType x == LeftBracket && listIsValid (y:xs) 1 0 = factIsValid (y:xs) n (m+1)
+    | getTokenType x == RightBracket = factIsValid (y:xs) n (m-1)
+    | (m >= 0) = factIsValid (y:xs) n m
+    | getTokenType x == LeftParen = factIsValid (y:xs) (n+1) m
     | (getTokenType x == RightParen && n == 1) = terminatorAbsenceCheck (y:xs)
-    | getTokenType x == RightParen = factIsValid (y:xs) (n-1)
+    | getTokenType x == RightParen = factIsValid (y:xs) (n-1) m
     -- Lower and upper case strings are acceptable
-    | getTokenType x == Lower || getTokenType x == Upper = factIsValid (y:xs) n
+    | getTokenType x == Lower || getTokenType x == Upper = factIsValid (y:xs) n m 
     -- Integers are acceptable
-    | getTokenType x == Int = factIsValid (y:xs) n
+    | getTokenType x == Int = factIsValid (y:xs) n m
     -- After a comma, an integer or a string must follow
-    | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = factIsValid (y:xs) n
+    | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = factIsValid (y:xs) n m
     | getTokenType x == CommaOperator && getTokenType y == LeftBracket = listIsValid xs 1 0
-    | getTokenType x == LeftBracket && listIsValid (y:xs) 1 0 = factIsValid (rest) n
     | otherwise = False
-    where (r:rest) = dropWhile (\z -> getTokenType z /= RightBracket) xs
 
 --Check if tail operator is used correctly
-tailCheck (x:y:xs)
+tailCheck (x:y:xs) 
+    | (getTokenType x == LeftBracket) = listIsValid (y:xs) 1 0
     | (getTokenType x /= Upper) = False
     | (getTokenType x == Upper) && (getTokenType y /= RightBracket) = False
     | otherwise = True
@@ -75,14 +77,16 @@ tailCheck (x:y:xs)
 listIsValid (x:y:xs) n m 
     | (getTokenType x == Upper 
         || getTokenType x == Lower 
-        || getTokenType x == Int) && (getTokenType y == TailOperator) = tailCheck (xs)
+        || getTokenType x == Int) && (getTokenType y == TailOperator) = tailCheck (xs) 
     | getTokenType x == Upper 
         || getTokenType x == Lower 
         || getTokenType x == Int = listIsValid (y:xs) n m 
     | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = listIsValid (y:xs) n m
+    | getTokenType x == CommaOperator && (getTokenType y == LeftBracket) = listIsValid xs (n+1) m
     | getTokenType x == LeftParen = listIsValid (y:xs) n (m+1) 
     | getTokenType x == RightParen = listIsValid (y:xs) n (m-1)
     | getTokenType x == RightBracket && (m == 0) && (n == 1) = True
+    | getTokenType x == RightBracket = listIsValid (y:xs) (n-1) m
     | getTokenType x == LeftBracket = listIsValid (y:xs) (n+1) m
     | getTokenType x == TailOperator = listIsValid (y:xs) n m 
     | otherwise = False
@@ -94,29 +98,31 @@ operatorAbsenceCheck (x:xs) = if (getTokenType x == CommaOperator || getTokenTyp
                               else False 
     --might add terminator to remove terminatoAbsenceCheck later
 
-ruleInitCheck [x] n = if (n == 0 && (getTokenType x) == PredOperator) then True else False
-ruleInitCheck (x:y:xs) n
-    | getTokenType x == LeftParen = ruleInitCheck (y:xs) (n+1)
-    | getTokenType x == RightParen = ruleInitCheck (y:xs) (n-1)
-    | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = ruleInitCheck (y:xs) n
-    | getTokenType x == Lower || getTokenType x == Upper = ruleInitCheck (y:xs) n
-    | getTokenType x == Int = ruleInitCheck (y:xs) n
-    | getTokenType x == LeftBracket && listIsValid (y:xs) 1 0 = ruleInitCheck (rest) n
+ruleInitCheck [x] n m= if (n == 0 && m == 0 && (getTokenType x) == PredOperator) then True else False
+ruleInitCheck (x:y:xs) n m
+    | getTokenType x == LeftBracket && listIsValid (y:xs) 1 0 = ruleInitCheck (y:xs) n (m+1)
+    | getTokenType x == RightBracket = ruleInitCheck (y:xs) n (m-1)
+    | (m > 0) = ruleInitCheck (y:xs) n m 
+    | getTokenType x == LeftParen = ruleInitCheck (y:xs) (n+1) m 
+    | getTokenType x == RightParen = ruleInitCheck (y:xs) (n-1) m 
+    | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = ruleInitCheck (y:xs) n m
+    | getTokenType x == Lower || getTokenType x == Upper = ruleInitCheck (y:xs) n m
+    | getTokenType x == Int = ruleInitCheck (y:xs) n m
     | otherwise = False
-    where (r:rest) = dropWhile (\z -> getTokenType z /= RightBracket) xs
 
-ruleIsValid :: [Token] -> Int -> Bool
-ruleIsValid [] _ = True
-ruleIsValid (x:y:xs) n 
-    | getTokenType x == LeftParen = ruleIsValid (y:xs) (n+1)
-    | (getTokenType x == RightParen && n == 1) = operatorAbsenceCheck (y:xs) 
-    | getTokenType x == Upper && n > 0= ruleIsValid (y:xs) n
-    | getTokenType x == Lower || getTokenType x == Upper = ruleIsValid (y:xs) n
-    | getTokenType x == RightParen = ruleIsValid (y:xs) (n-1)
-    | getTokenType x == Int = ruleIsValid (y:xs) n
-    | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = ruleIsValid (y:xs) n
-    | getTokenType x == LeftBracket && listIsValid (y:xs) 1 0 = ruleInitCheck (rest) n
-    where (r:rest) = dropWhile (\z -> getTokenType z /= RightBracket) xs
+ruleIsValid :: [Token] -> Int -> Int ->  Bool
+ruleIsValid [] _ _ = True
+ruleIsValid (x:y:xs) n m
+    | getTokenType x == LeftBracket && listIsValid (y:xs) 1 0 = ruleIsValid (y:xs) n (m+1)
+    | getTokenType x == RightBracket  = ruleIsValid (y:xs) n (m-1)
+    | (m > 0) = ruleIsValid (y:xs) n m 
+    | getTokenType x == LeftParen = ruleIsValid (y:xs) (n+1) m
+    | (getTokenType x == RightParen && n == 1 && m == 0) = operatorAbsenceCheck (y:xs) 
+    | getTokenType x == Upper && n > 0= ruleIsValid (y:xs) n m
+    | getTokenType x == Lower || getTokenType x == Upper = ruleIsValid (y:xs) n m
+    | getTokenType x == RightParen = ruleIsValid (y:xs) (n-1) m
+    | getTokenType x == Int = ruleIsValid (y:xs) n m
+    | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = ruleIsValid (y:xs) n m
 -- Parse the given tokens and create the Abstract Syntax Tree
 parse :: [[Token]] -> [ASTNode]
 parse [] = []
@@ -142,6 +148,7 @@ listPreds (x:y:xs)
     | getTokenType x == Upper = PredVariable (getIdentifier x) : listPreds (y:xs)                  -- Variables parsing: PRedVariable "X"
     | getTokenType x == Lower = Predicate (getIdentifier x) (parseAllArgs xs 0): listPreds (y:xs) -- Predicates parsing: Predicate "Name" [Arguements]
     | getTokenType x == RightBracket = []
+    | getTokenType x == LeftBracket = [Predicate "[]" (listPreds (y:xs))]
 -- Parse a predicate to an ASTNode
 predInit :: [Token] -> ASTNode
 predInit (x:xs)
