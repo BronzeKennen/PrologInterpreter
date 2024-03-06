@@ -51,7 +51,15 @@ main = do
   putStr "MGU9"
   print mgu
                    
-  let mgu = unify (Predicate "p" [PredVariable "X", PredVariable "U"]) (Predicate "p" [Predicate "a" [], Predicate "f" [PredVariable "X"]])
-
+  let mgu = unify (Predicate "q" [Predicate "[]" [],Predicate "[]" [],Predicate "0" []]) (Predicate "q" [PredVariable "A", PredVariable "B", PredVariable "N"])
   putStr "MGU10"
   print mgu
+
+  let mgu = unify (Predicate "q" [Predicate "[]" [Predicate "1" [],Predicate "2" [], Predicate "3" []],Predicate "[]" [Predicate "1" [],Predicate "2" [], Predicate "3" []],Predicate "0" []]) (Predicate "q" [PredVariable "A", PredVariable "B", PredVariable "N"])
+  putStr "MGU11"
+  print mgu
+
+  let mgu = unify (Predicate "q" [Predicate "[]" [Predicate "1" [],Predicate "2" [], Predicate "3" []],Predicate "[]" [Predicate "1" [],Predicate "2" [], Predicate "3" []],Predicate "0" []]) (Predicate "q" [Predicate "[]" [PredVariable "A",PredVariable "B"], Predicate "[]" [PredVariable "R", PredVariable "M"], PredVariable "N"])
+  putStr "MGU12"
+  print mgu
+

@@ -30,6 +30,8 @@ unify (Predicate y yargs) (PredVariable x) = unify (PredVariable x) (Predicate y
 
 -- Case: Unify 2 predicates
 -- If they have different names or different number of arguements, return FAIL
+-- [A,B,C|D] is possible which means [1,2,3,4,5,6,7] -> A=1 B=2 C=3 D=[4,5,6,7]
+-- unify (Predicate "[]" xargs) (Predicate y yargs)
 -- Otherwise, find substitution set and return it
 unify (Predicate x xargs) (Predicate y yargs)
     | x /= y || length xargs /= length yargs = [(PredVariable "FAIL", PredVariable "FAIL")]
@@ -46,7 +48,9 @@ fillSubstitutionSet (x:xs) (y:ys)
 -- replace every occurence of a variable with the atom that we unified it with
 replaceOccurence _ [] = []
 
-replaceOccurence [(var,atom)] (Predicate s (x:xs):ys) = [Predicate s (replaceOccurence [(var,atom)] (x:xs))]
+replaceOccurence [(var,atom)] (Predicate s (x:xs):ys) 
+    | s == "[]" = Predicate s (x:xs): replaceOccurence [(var,atom)] ys  
+    | otherwise = [Predicate s (replaceOccurence [(var,atom)] (x:xs))]
 
 replaceOccurence [(var,atom)] (Predicate x [] : xs) = Predicate x []: replaceOccurence [(var,atom)] xs 
 
