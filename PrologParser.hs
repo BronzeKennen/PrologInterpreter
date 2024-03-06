@@ -133,12 +133,14 @@ indexOf x (y:ys)
     | x /= getTokenType y = indexOf x ys +1
     | otherwise = 1
 
-listPreds (x:xs)
-    | getTokenType x == TailOperator = listPreds xs
-    | getTokenType x == LeftParen || getTokenType x == RightParen = listPreds xs -- Ignore left right parenthesis
-    | getTokenType x == Int || (getTokenType x == Lower && getTokenType (head xs) /= LeftParen) = Predicate (getIdentifier x) [] : listPreds xs                    -- Integers parsing: Predicate "Int" []
-    | getTokenType x == Upper = PredVariable (getIdentifier x) : listPreds xs                  -- Variables parsing: PRedVariable "X"
-    | getTokenType x == Lower = Predicate (getIdentifier x) (parseAllArgs xs 0): listPreds xs -- Predicates parsing: Predicate "Name" [Arguements]
+--will need to categorize wether we separate with comma or Tail operator
+listPreds (x:y:xs)
+    | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = listPreds (y:xs)
+    | getTokenType x == TailOperator = listPreds (y:xs)
+    | getTokenType x == LeftParen || getTokenType x == RightParen = listPreds (y:xs) -- Ignore left right parenthesis
+    | getTokenType x == Int || (getTokenType x == Lower && getTokenType (y) /= LeftParen) = Predicate (getIdentifier x) [] : listPreds (y:xs)
+    | getTokenType x == Upper = PredVariable (getIdentifier x) : listPreds (y:xs)                  -- Variables parsing: PRedVariable "X"
+    | getTokenType x == Lower = Predicate (getIdentifier x) (parseAllArgs xs 0): listPreds (y:xs) -- Predicates parsing: Predicate "Name" [Arguements]
     | getTokenType x == RightBracket = []
 -- Parse a predicate to an ASTNode
 predInit :: [Token] -> ASTNode
