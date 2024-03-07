@@ -142,7 +142,7 @@ indexOf x (y:ys)
 --will need to categorize wether we separate with comma or Tail operator
 listPreds (x:y:xs)
     | getTokenType x == CommaOperator && (getTokenType y == Int || getTokenType y == Lower || getTokenType y == Upper) = listPreds (y:xs)
-    | getTokenType x == TailOperator = listPreds (y:xs)
+    | getTokenType x == TailOperator = PredVariable "|" :listPreds (y:xs)
     | getTokenType x == LeftParen || getTokenType x == RightParen = listPreds (y:xs) -- Ignore left right parenthesis
     | getTokenType x == Int || (getTokenType x == Lower && getTokenType (y) /= LeftParen) = Predicate (getIdentifier x) [] : listPreds (y:xs)
     | getTokenType x == Upper = PredVariable (getIdentifier x) : listPreds (y:xs)                  -- Variables parsing: PRedVariable "X"

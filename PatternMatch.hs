@@ -40,6 +40,16 @@ unify2 (PredVariable x) (Predicate y yargs)
 -- If the variable is on the right side, symmetrically call the function
 unify2 (Predicate y yargs) (PredVariable x) = unify2 (PredVariable x) (Predicate y yargs)
 
+
+unify2 (Predicate "[]" x) (Predicate "[]" [(PredVariable "|"),PredVariable y])
+    = [(PredVariable y,Predicate "[]" x)] 
+
+unify2 (Predicate "[]" [(PredVariable "|"),PredVariable y]) (Predicate "[]" x)
+    = [(PredVariable y,Predicate "[]" x)] 
+
+unify2 (Predicate "[]" (x:xargs)) (Predicate "[]" (y:yargs))
+   | (unify2 x y /= [(PredVariable "FALSE", PredVariable "FALSE")]) = (unify2 x y) ++ unify2 (Predicate "[]" xargs) (Predicate "[]" yargs)
+   | otherwise = unify2 (Predicate "[]" xargs) (Predicate "[]" yargs)
 -- Case: Unify 2 predicates
 -- If they have different names or different number of arguements, return FALSE
 -- [A,B,C|D] is possible which means [1,2,3,4,5,6,7] -> A=1 B=2 C=3 D=[4,5,6,7]
@@ -51,6 +61,11 @@ unify2 (Predicate x []) (Predicate y [])
 unify2 (Predicate x xargs) (Predicate y yargs)
     | x /= y || length xargs /= length yargs = [(PredVariable "FALSE", PredVariable "FALSE")]
     | otherwise = fillSubstitutionSet xargs yargs
+ 
+-- 2 stoixeia -> enopoiisi
+-- stoixeio TailOp -> enopoiisi stoixeiou me oti menei
+-- 2 stoixeia (stoixeio me keno ) -> FAIL
+
 
 -- if substitutions are more than 1 we add them here
 fillSubstitutionSet [] [] = []

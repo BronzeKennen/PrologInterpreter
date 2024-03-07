@@ -42,12 +42,11 @@ userInput parsedFile = do
     if not validity then putStr "Invalid input.\n"
     else do
       let parsedInp = head (parse tokenedInp)
-      -- print "User query"
-      -- print parsedInp
-      -- print "last"
-      -- print (last parsedFile)
-      let answer = topDownEvaluate parsedInp parsedFile
-      putStr "Answer is: "
-      mapM_ print answer
+      let answer = topDownEvaluate ((parsedInp)) parsedFile
+      if(answer ==  [(PredVariable "FALSE", PredVariable "FALSE")]) 
+          then print "no" 
+          else if(answer == []) 
+          then print "yes"
+          else mapM_ print answer
   userInput parsedFile
 -- 

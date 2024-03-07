@@ -2,6 +2,7 @@ module TopDownEval where
 import PrologParser
 import PatternMatch
 
+
 topDownEvaluate :: ASTNode -> [ASTNode] -> [(ASTNode, ASTNode)]
 topDownEvaluate statement1 parsedFile
     | member (PredVariable "FALSE", PredVariable "FALSE") result = [(PredVariable "FALSE", PredVariable "FALSE")]

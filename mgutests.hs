@@ -59,10 +59,17 @@ main = do
   print mgu
 
   let mgu = unify (Predicate "q" [Predicate "[]" [Predicate "1" [],Predicate "2" [], Predicate "3" []],Predicate "[]" [Predicate "1" [],Predicate "2" [], Predicate "3" []],Predicate "0" []]) (Predicate "q" [PredVariable "A", PredVariable "B", PredVariable "N"])
-  putStr "MGU11"
+  putStr "MGU11\n\n"
+  print mgu
+  let mgu = unify (Fact (Predicate "q" [Predicate "[]" [Predicate "1" [], Predicate "2" [], Predicate "3" []]])) (Fact (Predicate "q" [Predicate "[]" [PredVariable "A",PredVariable "|",PredVariable "B"]]))
+  putStr "\n\nMGU12\n\n"
+  print mgu
+  
+
+  let mgu = unify (Fact (Predicate "q" [Predicate "[]" [Predicate "1" [], Predicate "2" [], Predicate "3" []]])) (Fact (Predicate "q" [Predicate "[]" [PredVariable "A",PredVariable "B"]]))
+  putStr "Mgu13"
   print mgu
 
-  let mgu = unify (Predicate "q" [Predicate "[]" [Predicate "1" [],Predicate "2" [], Predicate "3" []],Predicate "[]" [Predicate "1" [],Predicate "2" [], Predicate "3" []],Predicate "0" []]) (Predicate "q" [Predicate "[]" [PredVariable "A",PredVariable "B"], Predicate "[]" [PredVariable "R", PredVariable "M"], PredVariable "N"])
-  putStr "MGU12"
+  let mgu = unify (Predicate "smurfers" [PredVariable "L",PredVariable "A"]) (Predicate "smurfers" [PredVariable "X", PredVariable "Y"])
+  putStr "\n\nMGU14"
   print mgu
-
