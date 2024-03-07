@@ -1,7 +1,36 @@
 module TopDownEval where
 import PrologParser
 import PatternMatch
+import Data.Functor.Contravariant (Predicate)
 
+-- getAnswer :: [ASTNode] -> [(ASTNode, ASTNode)] -> [(ASTNode, ASTNode)]
+
+
+-- Get all the variables of a given query
+getVariables :: [ASTNode] -> [ASTNode]
+getVariables [] = []
+getVariables [PredVariable x] = [PredVariable x]
+getVariables [Fact x] = getVariables [x]
+getVariables [Predicate _ args] = getVariables args
+getVariables (x:xs) = getVariables [x] ++ getVariables xs
+
+-- simplifyMgu :: [(ASTNode, ASTNode)] -> [(ASTNode, ASTNode)] -> [(ASTNode, ASTNode)]
+-- simplifyMgu [] mgu = mgu
+-- simplifyMgu (x:xs) mgu
+--     | simplified == (x:xs) = simplified
+--     | otherwise = simplifyMgu simplified simplified
+--     where simplified = simplify x mgu
+
+-- simplify :: (ASTNode, ASTNode) -> [(ASTNode, ASTNode)] -> [(ASTNode, ASTNode)]
+-- simplify (x,y) [] = [(x,y)]
+-- simplify (PredVariable x1, PredVariable y1) ((PredVariable x2, PredVariable y2) : xs)
+--     | x1 == x2 && y1 == y2 = simplify (PredVariable x1, PredVariable y1) xs
+--     | otherwise = (PredVariable x2, PredVariable y2) : simplify (PredVariable x1, PredVariable y1) xs
+-- simplify (PredVariable x1, y1) ((x2, y2) : xs)
+--     | y1 == x2 = simplify (PredVariable x1, y2) xs
+--     | otherwise = (x2, y2) : simplify (PredVariable x1, y1) xs
+-- simplify x (y:ys) = simplify x ys
+-- simplify (x,y) ((z,w) : xs) = (z,w) : simplify (x,y) xs
 
 topDownEvaluate :: ASTNode -> [ASTNode] -> [(ASTNode, ASTNode)]
 topDownEvaluate statement1 parsedFile
@@ -27,10 +56,10 @@ topDownEvaluate2 (Fact (Predicate x xs)) (Fact (Predicate y ys) : rest) parsedFi
 -- In order to evaluate a rule, first we need to match the query with a head
 topDownEvaluate2 (Fact (Predicate x xs)) ((Rule head body) : rest) parsedFile
     -- If a head was matched, evaluate query using body
-    | mgu /= [(PredVariable "FALSE", PredVariable "FALSE")] = evaluateBody (applyMgu mgu body) parsedFile
+    | mgu /= [(PredVariable "FALSE", PredVariable "FALSE")] = evaluateBody (applyMgu mgu (renameBody body)) parsedFile
     -- Else if the matching failed, continue searching
     | otherwise = topDownEvaluate2 (Fact (Predicate x xs)) rest parsedFile
-    where mgu = unify (Predicate x xs) head
+    where mgu = unify (Predicate x xs) (renameVars head)
 
 -- APO EDW KAI KATW KSEKINANE TA MAGIKA ME TO EVALUATION TOU BODY ENOS RULE --
 
@@ -69,3 +98,14 @@ applyReplacement replacement ((Predicate pred args) : bodyRest) = Predicate pred
 applyReplacement (PredVariable x, replacement) ((PredVariable y) : bodyRest)
     | x == y = replacement : applyReplacement (PredVariable x, replacement) bodyRest
     | otherwise = PredVariable y : applyReplacement (PredVariable x, replacement) bodyRest
+
+renameBody [] = []
+renameBody (body:bodyRest) = renameVars body : renameBody bodyRest
+
+renameVars :: ASTNode -> ASTNode
+renameVars (Predicate x []) = Predicate x []
+renameVars (Predicate x (y:ys)) = Predicate x (renameVars2 (y:ys))
+
+renameVars2 [] = []
+renameVars2 ((PredVariable x):xs) = PredVariable (x++"\'") : renameVars2 xs 
+renameVars2 ((Predicate x y):xs) = Predicate x (renameVars2 y) : renameVars2 xs

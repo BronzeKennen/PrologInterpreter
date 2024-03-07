@@ -5,6 +5,10 @@ import TopDownEval
 import System.Exit
 import System.IO
 
+import Debug.Trace
+
+
+
 main = do
   putStr "\nEnter a prolog file or enter \"halt.\" to exit: "
   hFlush stdout
@@ -24,6 +28,7 @@ main = do
     else do
       mapM_ print parsedFile
       userInput parsedFile
+      
 -- 
 -- userInput:: [a0] -> IO b
 -- Read user input
@@ -43,10 +48,19 @@ userInput parsedFile = do
     else do
       let parsedInp = head (parse tokenedInp)
       let answer = topDownEvaluate ((parsedInp)) parsedFile
+      putStr "Query: "
+      print parsedInp
+      let vars = getVariables [parsedInp]
+      putStr "Vars: "
+      print vars
       if(answer ==  [(PredVariable "FALSE", PredVariable "FALSE")]) 
           then print "no" 
           else if(answer == []) 
           then print "yes"
-          else mapM_ print answer
+          else do
+            mapM_ print answer
+            -- let simplified = simplifyMgu answer answer
+            -- putStr "\nSimple?\n"
+            -- mapM_ print simplified
   userInput parsedFile
 -- 

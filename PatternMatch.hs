@@ -69,6 +69,7 @@ unify2 (Predicate x xargs) (Predicate y yargs)
 
 -- if substitutions are more than 1 we add them here
 fillSubstitutionSet [] [] = []
+fillSubstitutionSet [] (y:ys) = [(PredVariable "1", PredVariable "1")]
 fillSubstitutionSet (x:xs) (y:ys)
     | null unified = fillSubstitutionSet xs ys
     | not (null unified) = unified ++ fillSubstitutionSet (replaceOccurence unified xs) (replaceOccurence unified ys)
@@ -78,9 +79,10 @@ fillSubstitutionSet (x:xs) (y:ys)
 -- replace every occurence of a variable with the atom that we unified it with
 replaceOccurence _ [] = []
 
+
 replaceOccurence [(var,atom)] (Predicate s (x:xs):ys)
     | s == "[]" = Predicate s (x:xs): replaceOccurence [(var,atom)] ys
-    | otherwise = [Predicate s (replaceOccurence [(var,atom)] (x:xs))]
+    | otherwise = Predicate s (replaceOccurence [(var,atom)] (x:xs)) : replaceOccurence [(var,atom)] ys
 
 replaceOccurence [(var,atom)] (Predicate x [] : xs) = Predicate x []: replaceOccurence [(var,atom)] xs
 
