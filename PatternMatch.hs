@@ -28,7 +28,9 @@ unify2 (Fact x) (Fact y) = unify2 x y
 unify2 (Fact x) (Rule y _) = unify2 x y
 -- Case: Unify 2 variables
 -- If they are the same variable, MGU is empty. Else, assign y to x 
-unify2 (PredVariable x) (PredVariable y) = [(PredVariable x, PredVariable y)]
+unify2 (PredVariable x) (PredVariable y) 
+    | x == y = []
+    | otherwise = [(PredVariable x, PredVariable y)]
 
 -- Case: Unify a variable with a predicate
 -- If x occurs in y, unifying is impossible. Else, assign the predicate to x

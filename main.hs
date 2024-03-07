@@ -16,19 +16,19 @@ main = do
     -- Apply lexer to file to get the tokens
     let tokens = tokenizeInput file_content
   -- 
-    let parsed = parse tokens
+    let parsedFile = parse tokens
     -- Check if the given program has the correct syntax
     let isValid = checkIsValid tokens
     if not isValid then die "ERROR: Program's syntax is not correct. Exiting..."
   -- 
     else do
-      mapM_ print parsed
-      userInput parsed
+      mapM_ print parsedFile
+      userInput parsedFile
 -- 
 -- userInput:: [a0] -> IO b
 -- Read user input
 userInput :: [ASTNode] -> IO b
-userInput parsed = do
+userInput parsedFile = do
   putStr "\nEnter a query or enter \"halt.\" to exit: "
   hFlush stdout
   -- If user inputs 'halt.', exit the program
@@ -45,9 +45,9 @@ userInput parsed = do
       -- print "User query"
       -- print parsedInp
       -- print "last"
-      -- print (last parsed)
-      let answer = topDownEvaluate parsedInp parsed
+      -- print (last parsedFile)
+      let answer = topDownEvaluate parsedInp parsedFile
       putStr "Answer is: "
       mapM_ print answer
-  userInput parsed
+  userInput parsedFile
 -- 
