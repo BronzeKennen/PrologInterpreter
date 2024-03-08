@@ -1,18 +1,43 @@
 module TopDownEval where
 import PrologParser
 import PatternMatch
-import Data.Functor.Contravariant (Predicate)
+import Debug.Trace
 
--- getAnswer :: [ASTNode] -> [(ASTNode, ASTNode)] -> [(ASTNode, ASTNode)]
+-- Some of the replacements may not be needed in the final answer
+-- Only keep important replacements by trimming replacements that aren't related to the query's variables
+trimAnswer :: [(ASTNode, ASTNode)] -> [ASTNode] -> [(ASTNode, ASTNode)]
+trimAnswer [] _ = []
+trimAnswer ((x, y):xs) vars
+    | member x vars = (x,y) : trimAnswer xs vars
+    | otherwise = trimAnswer xs vars
 
+-- Takes the MGU and the list of the query's variables
+-- Outputs a formatted answer which can easily be read by the user
+formatAnswer :: [(ASTNode, ASTNode)] -> [ASTNode] -> String
+formatAnswer answer vars
+    | answer == [(PredVariable "FALSE", PredVariable "FALSE")] = "false."
+    | null answer = "true."
+    | otherwise = formatAnswer2 trimmed
+    where trimmed = trimAnswer answer vars
 
--- Get all the variables of a given query
-getVariables :: [ASTNode] -> [ASTNode]
-getVariables [] = []
-getVariables [PredVariable x] = [PredVariable x]
-getVariables [Fact x] = getVariables [x]
-getVariables [Predicate _ args] = getVariables args
-getVariables (x:xs) = getVariables [x] ++ getVariables xs
+-- Format "(Variable X, someAssignment)" to "X = someAssignment"
+formatAnswer2 :: [(ASTNode, ASTNode)] -> String
+formatAnswer2 [] = "true."
+formatAnswer2 [(PredVariable x, PredVariable y)] = x ++ " = " ++ y
+formatAnswer2 [(PredVariable x, Predicate y [])] = x ++ " = " ++ y
+formatAnswer2 [(PredVariable x, Predicate y args)] = x ++ " = " ++ formatAnswer3 [Predicate y args]
+formatAnswer2 (x:xs) = formatAnswer2 [x] ++ ", " ++ formatAnswer2 xs
+
+-- Format "Predicate s [arg1, arg2, arg3]" to s(arg1,arg2,arg3,)
+-- NOTE: I have no idea how to get rid of the final comma :( 
+formatAnswer3 :: [ASTNode] -> String
+formatAnswer3 [PredVariable x] = x ++ ","
+formatAnswer3 [Predicate x []] = x ++ ","
+formatAnswer3 [Predicate x args] = x ++ "(" ++ formatAnswer3 args ++ ")"
+formatAnswer3 (x:xs) = formatAnswer3 [x] ++ " " ++ formatAnswer3 xs
+
+-- -- getAnswer :: [ASTNode] -> [(ASTNode, ASTNode)] -> [(ASTNode, ASTNode)]
+-- getAnswer [] _ = []
 
 -- simplifyMgu :: [(ASTNode, ASTNode)] -> [(ASTNode, ASTNode)] -> [(ASTNode, ASTNode)]
 -- simplifyMgu [] mgu = mgu
@@ -53,13 +78,16 @@ topDownEvaluate2 (Fact (Predicate x xs)) (Fact (Predicate y ys) : rest) parsedFi
 
 -- APO EDW KAI KATW KSEKINANE TA MAGIKA ME TA RULES. --
 
+-- FOR NOW IGNORE RULES
+topDownEvaluate2 (Fact (Predicate x xs)) ((Rule head body) : rest) parsedFile = topDownEvaluate2 (Fact (Predicate x xs)) rest parsedFile
+
 -- In order to evaluate a rule, first we need to match the query with a head
-topDownEvaluate2 (Fact (Predicate x xs)) ((Rule head body) : rest) parsedFile
-    -- If a head was matched, evaluate query using body
-    | mgu /= [(PredVariable "FALSE", PredVariable "FALSE")] = evaluateBody (applyMgu mgu (renameBody body)) parsedFile
-    -- Else if the matching failed, continue searching
-    | otherwise = topDownEvaluate2 (Fact (Predicate x xs)) rest parsedFile
-    where mgu = unify (Predicate x xs) (renameVars head)
+-- topDownEvaluate2 (Fact (Predicate x xs)) ((Rule head body) : rest) parsedFile
+--     -- If a head was matched, evaluate query using body
+--     | mgu /= [(PredVariable "FALSE", PredVariable "FALSE")] = evaluateBody (applyMgu mgu (renameBody body)) parsedFile
+--     -- Else if the matching failed, continue searching
+--     | otherwise = topDownEvaluate2 (Fact (Predicate x xs)) rest parsedFile
+--     where mgu = unify (Predicate x xs) (renameVars head)
 
 -- APO EDW KAI KATW KSEKINANE TA MAGIKA ME TO EVALUATION TOU BODY ENOS RULE --
 
@@ -79,26 +107,6 @@ evaluateBody (body : bodyRest) parsedFile
 -- H APPLYMGU KALEI THN APPLYREPLACEMENT GIA KA8E REPLACEMENT POU UPARXEI STO MGU --
 -- NOMIZW OTI AYTES DOULEUOUN TELEIA, DEN XREIAZETAI NA TIS PEIRAKSOUME AKOMA KAI AN ALLAKSOUME TON TROPO SKEPSHS THS EVALUATEBODY--
 
--- Apply the MGU to a whole body
-applyMgu :: [(ASTNode, ASTNode)] ->[ASTNode] -> [ASTNode]
--- If the MGU is empty, then no replacements exist. Return the body with no changes
-applyMgu [] body = body
--- If there is only 1 replacement, apply it to the body
-applyMgu [replacement] body = applyReplacement replacement body
--- Apply current replacement to the body. Apply other replacements to the new body
-applyMgu (replacement : rest) body = applyMgu rest (applyReplacement replacement body)
-
--- Apply 1 replacement to a whole body
-applyReplacement :: (ASTNode, ASTNode) -> [ASTNode] -> [ASTNode]
-applyReplacement _ [] = []
--- If a predicate occurs, apply the replacement on its arguements and move to next statement
-applyReplacement replacement ((Predicate pred args) : bodyRest) = Predicate pred newArgs : applyReplacement replacement bodyRest
-    where newArgs = applyReplacement replacement args
--- If an arguement occurs, attempt to replace it and move to the next statement
-applyReplacement (PredVariable x, replacement) ((PredVariable y) : bodyRest)
-    | x == y = replacement : applyReplacement (PredVariable x, replacement) bodyRest
-    | otherwise = PredVariable y : applyReplacement (PredVariable x, replacement) bodyRest
-
 renameBody [] = []
 renameBody (body:bodyRest) = renameVars body : renameBody bodyRest
 
@@ -107,5 +115,22 @@ renameVars (Predicate x []) = Predicate x []
 renameVars (Predicate x (y:ys)) = Predicate x (renameVars2 (y:ys))
 
 renameVars2 [] = []
-renameVars2 ((PredVariable x):xs) = PredVariable (x++"\'") : renameVars2 xs 
+renameVars2 ((PredVariable x):xs) = PredVariable (x++"\'") : renameVars2 xs
 renameVars2 ((Predicate x y):xs) = Predicate x (renameVars2 y) : renameVars2 xs
+
+-- Get all the variables of a given query
+getVariables :: [ASTNode] -> [ASTNode]
+getVariables [] = []
+getVariables [PredVariable x] = [PredVariable x]
+getVariables [Fact x] = getVariables [x]
+getVariables [Predicate _ args] = getVariables args
+getVariables (x:xs) = getVariables [x] ++ getVariables xs
+
+-- Check if a fact only contains discrete variables as arguements
+-- onlyVars :: [ASTNode] -> [String] -> Bool
+-- onlyVars [] _ = False
+-- onlyVars [PredVariable x] found = not (member x found)
+-- onlyVars ((PredVariable x):xs) found
+--     | member x found = False
+--     | otherwise = onlyVars xs (found ++ [x])
+-- onlyVars ((Predicate _ _):_) _ = False

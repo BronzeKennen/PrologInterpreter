@@ -46,6 +46,7 @@ main = do
   putStr "MGU8: "
   print mgu
 
+  -- This should return empty
   let mgu = unify (Predicate "b" [Predicate "15" [],Predicate "15" []]) (Predicate "b" [Predicate "15" [],Predicate "15" []]) 
   putStr "MGU8: "
   print mgu
