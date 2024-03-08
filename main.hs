@@ -5,14 +5,10 @@ import TopDownEval
 import System.Exit
 import System.IO
 
-import Debug.Trace
-
-
-
 main :: IO b
 main = do
   -- Read a file from user 
-  putStr "\nEnter a prolog file or enter \"halt.\" to exit: "
+  putStr "Enter a prolog file or enter \"halt.\" to exit: "
   hFlush stdout
   filename <- getLine
   if filename == "halt." then die "Program Exit."
@@ -29,7 +25,6 @@ main = do
 
     -- If the file has the correct syntax, get queries from user until they enter 'halt.'
     else do
-      -- mapM_ print parsedFile
       readQueries parsedFile
 
 -- Read queries from user
@@ -44,7 +39,6 @@ readQueries parsedFile = do
   -- Parse user query
   else do
     let userInput = tokenizeInput inp
-    print userInput
     let validity = checkIsValid userInput
     if not validity then putStr "Invalid input.\n"
     else do
@@ -52,9 +46,9 @@ readQueries parsedFile = do
       -- If user entered a valid query, apply top down evaluation to it
       let query = head (parse userInput)
       let answer = topDownEvaluate query parsedFile
-      print answer
       let formattedAnswer = formatAnswer answer (getVariables [query])
       print formattedAnswer
+      
   -- Repeat until user enters 'halt.'
   readQueries parsedFile
 -- 

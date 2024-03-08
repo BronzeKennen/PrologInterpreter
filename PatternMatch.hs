@@ -1,14 +1,8 @@
 module PatternMatch where
 import PrologParser
 import PrologLexer
-import Debug.Trace
 
--- Returns true when a is a member of the given list. False otherwise
-member :: (Eq a) => a -> [a] -> Bool
-member x [] = False
-member x (y:ys) | x==y = True
-                | otherwise = member x ys
-
+-------------------- Unify --------------------
 -- Unification algorithm reference: https://www.javatpoint.com/ai-unification-in-first-order-logic
 -- Find the MGU using unify algorithm. Unify returns a list of 2-tuples: (ASTNode1, ASTNode2)
 -- This means that we assign ASTNode2 to ASTNode1. For example, if MGU = [(X, s(15)), (Y,X)], we assign
@@ -26,9 +20,9 @@ unify2 :: ASTNode -> ASTNode -> [(ASTNode, ASTNode)]
 unify2 (Fact x) (Fact y) = unify2 x y
 -- Case: Unify 2 variables
 -- If they are the same variable, MGU is empty. Else, assign y to x 
-unify2 (PredVariable x) (PredVariable y) = []
-    -- | x == y = []
-    -- | otherwise = [(PredVariable x, PredVariable y)]
+unify2 (PredVariable x) (PredVariable y)
+    | x == y = []
+    | otherwise = [(PredVariable x, PredVariable y)]
 
 -- Case: Unify a variable with a predicate
 -- If x occurs in y, unifying is impossible. Else, assign the predicate to x
@@ -39,15 +33,15 @@ unify2 (PredVariable x) (Predicate y yargs)
 unify2 (Predicate y yargs) (PredVariable x) = unify2 (PredVariable x) (Predicate y yargs)
 
 -- SWTHRHS LISTES--
--- unify2 (Predicate "[]" x) (Predicate "[]" [PredVariable "|",PredVariable y])
---     = [(PredVariable y,Predicate "[]" x)] 
+unify2 (Predicate "[]" x) (Predicate "[]" [PredVariable "|",PredVariable y])
+    = [(PredVariable y,Predicate "[]" x)] 
 
--- unify2 (Predicate "[]" [(PredVariable "|"),PredVariable y]) (Predicate "[]" x)
---     = [(PredVariable y,Predicate "[]" x)] 
+unify2 (Predicate "[]" [(PredVariable "|"),PredVariable y]) (Predicate "[]" x)
+    = [(PredVariable y,Predicate "[]" x)] 
 
--- unify2 (Predicate "[]" (x:xargs)) (Predicate "[]" (y:yargs))
---    | (unify2 x y /= [(PredVariable "FALSE", PredVariable "FALSE")]) = (unify2 x y) ++ unify2 (Predicate "[]" xargs) (Predicate "[]" yargs)
---    | otherwise = unify2 (Predicate "[]" xargs) (Predicate "[]" yargs)
+unify2 (Predicate "[]" (x:xargs)) (Predicate "[]" (y:yargs))
+   | (unify2 x y /= [(PredVariable "FALSE", PredVariable "FALSE")]) = (unify2 x y) ++ unify2 (Predicate "[]" xargs) (Predicate "[]" yargs)
+   | otherwise = unify2 (Predicate "[]" xargs) (Predicate "[]" yargs)
 -----
 
 -- Case: Unify 2 predicates
@@ -66,11 +60,14 @@ unify2 (Predicate x xargs) (Predicate y yargs)
 -- stoixeio TailOp -> enopoiisi stoixeiou me oti menei
 -- 2 stoixeia (stoixeio me keno ) -> FAIL
 
+-- Returns true when a is a member of the given list. False otherwise
+member :: (Eq a) => a -> [a] -> Bool
+member x [] = False
+member x (y:ys) | x==y = True
+                | otherwise = member x ys
 
 -- if substitutions are more than 1 we add them here
 fillSubstitutionSet :: [ASTNode] -> [ASTNode] -> [(ASTNode, ASTNode)]
--- 
--- fillSubstitutionSet [] (y:ys) = [(PredVariable "1", PredVariable "1")]
 -- Given list of arguements has ended. Stop filling substitution set
 fillSubstitutionSet [] [] = []
 fillSubstitutionSet (x:xs) (y:ys)
@@ -81,20 +78,6 @@ fillSubstitutionSet (x:xs) (y:ys)
     -- Else, save the unification, apply mgu to the rest of the arguements and continue
     | otherwise = mgu ++ fillSubstitutionSet (applyMgu mgu xs) (applyMgu mgu ys)
     where mgu  = unify x y
-
--- -- replace every occurence of a variable with the atom that we unified it with
--- replaceOccurence :: [(ASTNode, ASTNode)] -> [ASTNode] -> [ASTNode]
--- replaceOccurence _ [] = []
-
--- replaceOccurence [(var,atom)] (Predicate s (x:xs):ys)
---     | s == "[]" = Predicate s (replaceOccurence [(var,atom)] (x:xs)) : replaceOccurence [(var,atom)] ys
---     | otherwise = Predicate s (replaceOccurence [(var,atom)] (x:xs)) : replaceOccurence [(var,atom)] ys
-
--- replaceOccurence [(var,atom)] (Predicate x [] : xs) = Predicate x []: replaceOccurence [(var,atom)] xs
-
--- replaceOccurence [(var,atom)] (x:xs)
---     | x == var = atom: replaceOccurence [(var,atom)] xs
---     | otherwise = x: replaceOccurence [(var,atom)] xs
 
 -- Returns true if variable X occurs in an arguement. False otherwise.
 foundInArgs :: String -> [ASTNode] -> Bool
@@ -109,7 +92,9 @@ foundInArgs x [] = False
 foundInArgs x (y:ys)
     | not (foundInArgs x [y]) = foundInArgs x ys
     | otherwise = True
+----------------------------------------
 
+-------------------- Apply MGU --------------------
 -- Apply the MGU to a whole body
 applyMgu :: [(ASTNode, ASTNode)] ->[ASTNode] -> [ASTNode]
 -- If the MGU is empty, then no replacements exist. Return the body with no changes
@@ -129,3 +114,52 @@ applyReplacement replacement ((Predicate pred args) : bodyRest) = Predicate pred
 applyReplacement (PredVariable x, replacement) ((PredVariable y) : bodyRest)
     | x == y = replacement : applyReplacement (PredVariable x, replacement) bodyRest
     | otherwise = PredVariable y : applyReplacement (PredVariable x, replacement) bodyRest
+----------------------------------------
+
+-------------------- Compose MGUs --------------------
+-- Compose a list of MGUs and produce a more concise MGU
+composeMgu :: [(ASTNode, ASTNode)] -> [(ASTNode, ASTNode)]
+composeMgu mgu = composeMgu2 mgu mgu
+
+composeMgu2 :: [(ASTNode, ASTNode)] -> [(ASTNode, ASTNode)] -> [(ASTNode, ASTNode)]
+composeMgu2 [] mgu = mgu
+composeMgu2 (x:xs) mgu
+    | equal composed mgu = composeMgu2 xs mgu
+    | otherwise = composeMgu2 composed composed
+    where composed = composeList x mgu
+
+-- Compose a substitution with a list
+composeList :: (ASTNode, ASTNode) -> [(ASTNode, ASTNode)] -> [(ASTNode, ASTNode)]
+composeList x [] = [x]
+composeList x (y:ys)
+    | x == y = composeList x ys
+    | null composed = y : composeList x ys
+    | otherwise = composed ++ ys
+    where composed = compose x y
+
+-- Compose 2 substitutions
+compose :: (ASTNode, ASTNode) -> (ASTNode, ASTNode) -> [(ASTNode, ASTNode)]
+compose x y
+    | null composed && not (null (compose2 y x)) = compose2 y x
+    | null composed && null (compose2 y x) = []
+    | otherwise = composed
+    where composed = compose2 x y
+
+compose2 :: (ASTNode, ASTNode) -> (ASTNode, ASTNode) -> [(ASTNode, ASTNode)]
+compose2 (PredVariable x1, PredVariable x2) (PredVariable y1, y2)
+    | x2 == y1 = [(PredVariable x1, y2)]
+    | otherwise = []
+compose2 (PredVariable x1, Predicate x2 []) _ = []
+compose2 (PredVariable x1, Predicate x2 args) (PredVariable y1, y2)
+    | replaced == args = []
+    | otherwise = [(PredVariable x1, Predicate x2 replaced)]
+    where replaced = applyReplacement (PredVariable y1, y2) args
+
+-- Returns true if 2 lists are equal. 2 lists are considered equal if they 
+-- have the same items. Their order doesn't matter
+equal :: Eq a => [a] -> [a] -> Bool
+equal [] _ = True
+equal (x:xs) y
+    | member x y = equal xs y
+    | otherwise = False
+----------------------------------------

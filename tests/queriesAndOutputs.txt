@@ -1,0 +1,28 @@
+diffArgs.pl : 
+?- p(A,B,C,D,E).                                        ->  A = 123, B = s(s(s(s(0,)))), C = hello, E = z(1, 2, 3, 4, 5)
+?- p(X,s(Y),Z,W,A).                                     ->  X = 123, Y = s(s(s(0,))), Z = hello, A = z(1, 2, 3, 4, 5)
+?- p(1,2,3,4,5).                                        ->  fail.
+?- p(123, s(s(s(s(0)))), hello, Hello, z(1,2,3,4,5)).   ->  true.
+
+varStatements.pl :
+?- q(15).                               ->  true
+?- q(X).                                ->  X=15
+?- q(11).                               ->  false
+?- p(otiKaiNaDwseis, otiKaiNaDwseis).   ->  true
+?- p(X,X,X).                            ->  X = s(1).
+?- z(X,X,X).                            ->  false
+?- z(X,s(s(0)), s(0)).                  ->  true
+?- p(1,2,Z).                            ->  Z = s(1)
+
+cool.pl :
+?- cool(X,Y).           ->  X = mike, Y = swthrhs
+?- cool(Y,X).           ->  Y = mike, X = swthrhs
+?- cool(mike,X).        ->  X = swthrhs
+?- cool(mike,Y).        ->  Y = swthrhs
+?- cool(mike,swthrhs).  ->  true.
+?- cool(swthrhs,mike).  ->  false.
+
+sum.pl :
+?- sum(s(s(0)), s(s(s(0))), X).                                         ->  X = s(s(s(s(s(0)))))
+?- sum(A, s(s(s(s(s(s(s(s(0)))))))), s(s(s(s(s(s(s(s(s(0)))))))))).     ->  A = s(0)
+?- sum(s(s(s(0))), Z, s(s(s(s(s(0)))))).                                ->  Z = s(s(0))

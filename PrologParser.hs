@@ -1,7 +1,7 @@
 module PrologParser where
 import PrologLexer
 import Data.String
-import Debug.Trace
+
 -- ASTNode data type
 data ASTNode
     = Fact ASTNode
@@ -32,7 +32,7 @@ checkIsValid (x:xs)
     -- Before checking if a token is valid make sure that it doesn't start with a variable
     | getTokenType (head x) /= Lower = False
     | isRule x && (ruleInitCheck first 0 0)&& (ruleIsValid second 0 0)  = checkIsValid xs
-    | factIsValid x 0 0 = trace ("Checking if fact is valid") (checkIsValid xs)
+    | factIsValid x 0 0 = checkIsValid xs
     | otherwise = False
     where (first, second) = splitAt (indexOf PredOperator x) x
 
@@ -54,7 +54,7 @@ factIsValid (x:y:xs) n m
     | getTokenType x == LeftBracket && listIsValid (y:xs) 1 0 = factIsValid (y:xs) n (m+1)
     | getTokenType x == RightBracket = factIsValid (y:xs) n (m-1)
     | (m > 0) = factIsValid (y:xs) n m
-    | getTokenType x == LeftParen = trace ("increasing left paren: " ++ show (n+1)) (factIsValid (y:xs) (n+1) m)
+    | getTokenType x == LeftParen = factIsValid (y:xs) (n+1) m
     | (getTokenType x == RightParen && n == 1) = terminatorAbsenceCheck (y:xs)
     | getTokenType x == RightParen = factIsValid (y:xs) (n-1) m
     -- Lower and upper case strings are acceptable
@@ -169,20 +169,3 @@ parseAllArgs (x:xs) n
     | getTokenType x == LeftBracket = Predicate "[]" (listPreds xs): parseAllArgs rest n
     | otherwise = parseAllArgs xs n     -- Used to ignore commas
     where rest = dropWhile (\z -> getTokenType z /= RightBracket) xs
--- MALAKA OUTE MIA EKFWNHSH DEN MPOROUN NA GRAPSOUN SWSTA
--- AYTO EINAI TO SWSTO OUTPUT TOU PARSER. TO BRHKA STO DISC
-
--- a(X) :- a(s(X)), b(Y).
--- b(15).
--- [
---     Rule (Predicate "a" [PredVariable "X"]) [
---       Predicate "a" [
---         Predicate "s" [PredVariable "X"]
---       ],
---       Predicate "b" [PredVariable "Y" ] 
---      ],
---        Fact (Predicate "b" [Predicate "15" []])
--- ] 
-
--- b(mike).
--- Fact (Predicate "b" [Predicate "mike" []])
