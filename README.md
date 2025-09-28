@@ -1,40 +1,160 @@
-## Makefile
-- Με την εντολή 'make' γίνεται seperate compiling του προγράμματος και παράγεται το εκτελέσιμο main
-- Τρέχουμε το εκτελέσιμο με την εντολή "./main"
-- Αφού τρέξουμε το εκτελέσιμο, δίνουμε το αρχείο prolog σαν input και ξεκινάμε να τρέχουμε prolog queries
-- Για να τερματίσουμε το πρόγραμμα δίνουμε την εντολή "halt."
-- Με την εντολή 'make clean' διαγράφονται όλα τα εκτελέσιμα, .o και .hi αρχεία
+# PrologInterpreter
 
-## PrologLexer.hs
-- Μετατρέπει ένα prolog αρχείο σε λίστα από tokens.
-- Περιέχει τη δομή που περιλαμβάνει όλα τα πιθανά tokens.
+This is a simple Prolog interpreter implemented in Haskell. It parses Prolog source files, evaluates queries via a top‑down strategy, and supports unification and backtracking.
 
-## PrologParser.hs
-- Μετατρέπει τη λίστα από tokens σε λίστα από ASTNodes.
-- Περιέχει τη δομή που περιλαμβάνει όλα τα πιθανά ASTNodes.
-- Περιέχει τη συνάρτηση 'checkIsValid' η οποία ελέγχει εάν ένα αρχείο prolog είναι συντακτικά σωστό.
+## Table of Contents
 
-## PatternMatch.hs
-- Περιέχει τη συνάρτηση 'unify' η οποία παίρνει σαν ορίσματα δύο ASTNodes και επιστρέφει τον πιο γενικό ενοποιτή τους (MGU).
-Ο MGU είναι μια λίστα από 2-tuples (ASTNode1, ASTNode2). Κάθε 2-tuple δηλώνει ότι αναθέτουμε το ASTNode2 στο ASTNode1.
-- Ακολουθεί τον αλγόριθμο UNIFY από το μάθημα Τεχνητή Νοημοσύνη Ι. Ο αλγόριθμος αναγράφεται επίσης στο link που βρίσκεται στην κορυφή του αρχείου.
-- Περιέχει επιπλέον τη συνάρτηση 'applyMgu' η οποία εφαρμόζει τον MGU σε μία λίστα από predicates
-- Περιέχει, τέλος, τη συνάρτηση 'composeMgu' η οποία παίρνει σαν όρισμα μία λίστα από MGUs και συνθέτει τις αναθέσεις τους σε ένα ενιαίο και μοναδικό MGU
+1. [Overview](#overview)  
+2. [Features](#features)  
+3. [Repository Structure](#repository-structure)  
+4. [Getting Started](#getting-started)  
+   1. [Requirements](#requirements)  
+   2. [Build & Run](#build--run)  
+   3. [Usage](#usage)  
+5. [Core Modules](#core-modules)  
+6. [Testing](#testing)  
+7. [Limitations & Future Work](#limitations--future-work)  
+8. [License](#license)  
+9. [Acknowledgments](#acknowledgments)  
 
-## TopDownEval.hs
-- Περιέχει τη συνάρτηση 'topDownEvaluate' η οποία παίρνει σαν όρισμα το query του χρήστη και το parsed αρχείο και εφαρμόζει αποτίμηση Top-Down όπως αναγράφεται στην εκφώνηση.
-- Εάν βρεθεί λύση τότε αυτή εκτυπώνεται στο terminal. Εάν δεν βρεθεί λύση τότε εκτυπώνεται "fail." . Εάν δωθεί σαν query κάποιο γεγονός τότε εκτυπώνεται "true." .
-- Στην περίπτωση που βρεθεί λύση, ανατίθενται τιμές μόνος στις μεταβλητές όπου είναι απαραίτητο. Για παράδειγμα εάν έχουμε το γεγονός "fact(prolog, X)." και δωθεί σαν query το "fact(X, Y)." τότε η αναμενόμενη έξοδος είναι η "X=prolog".
-- Ο τρόπος που αντιμετωπίζουμε variables με τα ίδια ονόματα μεταξύ facts/rules και queries είναι με το να προσθέσουμε μια απόστροφο(') σε όλες τις μεταβλητές των facts/rules κατά το evaluation τους. Στην περίπτωση που υπάρχουν ήδη μεταβλητές με μία απόστροφο, προστίθεται συνολικά 2, εάν υπάρχουν ήδη μεταβλητές με 2 απόστροφους τότε προσθέτουμε συνολικά 3 κοκ.
+## Overview
 
-## tests
-- Περιέχει prolog αρχεία τα οποία μπορούν να δωθούν σαν inputs κατά την εκτέλεση του προγράμματος
-- Το αρχείο 'queriesAndOutputs.txt' περιέχει μερικά queries καθώς και τα αναμενόμενα outputs τους
+This interpreter reads a Prolog file containing facts and rules, accepts queries interactively (or from input), and attempts to resolve them using unification and a depth‑first top-down evaluator.  
 
-## main.hs
-- Περιέχει τη main συνάρτηση η οποία διαβάζει το prolog αρχείο και τα queries του χρήστη, τα κάνει parse και εκτελεί τα queries
-- Κάνει exit όταν δωθεί η εντολή 'halt.'
+It’s intended for educational purposes: to illustrate how Prolog evaluation works under the hood.
 
-## mgutests.hs
-- Περιέχει κάποια tests σχετικά με τον αλγόριθμο unify και το MGU
-- Αφού κάνουμε make, μπορούμε να τρέξουμε την εντολή "./mgutests" για να πάρουμε τα αποτελέσματά τους
+## Features
+
+- Lexical analysis (tokenization) of Prolog source  
+- Parsing into an AST (Abstract Syntax Tree)  
+- Syntax validation  
+- Unification algorithm producing most general unifiers (MGUs)  
+- Application of substitutions to queries and predicates  
+- Top-down (depth-first) evaluation with backtracking  
+- Basic handling of variable scoping (renaming of variables internally)  
+- A test suite for the unification algorithm  
+- Simple command-line interface (read file, accept queries, quit via `halt.`)  
+
+## Repository Structure
+
+```
+PrologInterpreter/
+│  
+├── LICENSE  
+├── Makefile  
+├── main.hs  
+├── PrologLexer.hs  
+├── PrologParser.hs  
+├── PatternMatch.hs  
+├── TopDownEval.hs  
+├── mgutests.hs  
+├── tests/  
+│   ├── *.pl              ← sample Prolog files  
+│   └── queriesAndOutputs.txt  
+└── README.md  
+```
+
+Brief descriptions:
+
+- **main.hs** — Entry point. Loads a Prolog file, then loops to read and evaluate queries until `halt.`  
+- **PrologLexer.hs** — Converts source text into tokens  
+- **PrologParser.hs** — Parses tokens into AST nodes, with syntax checking  
+- **PatternMatch.hs** — Implements `unify`, `applyMgu`, `composeMgu`  
+- **TopDownEval.hs** — Contains the top-down evaluation logic with backtracking  
+- **mgutests.hs** — Tests for the unification / MGU logic  
+- **tests/** — Sample Prolog files and a mapping of queries → expected outputs  
+
+## Getting Started
+
+### Requirements
+
+- GHC (Glasgow Haskell Compiler)  
+- `make` (or equivalent build tool)  
+
+### Build & Run
+
+You can build and run the interpreter via the provided `Makefile`:
+
+```bash
+# compile the interpreter and test suite
+make
+
+# run the interpreter using a Prolog source file
+./main path/to/file.pl
+```
+
+To clean up build artifacts:
+
+```bash
+make clean
+```
+
+### Usage
+
+1. Start the interpreter with your Prolog source file:  
+   ```
+   ./main myprogram.pl
+   ```
+
+2. At the prompt, type a Prolog query, for example:
+   ```
+   ancestor(X, Y).
+   ```
+
+3. The interpreter will either print a solution (e.g. `X = alice, Y = bob.`) or `fail.` if none.
+
+4. To stop, enter:
+   ```
+   halt.
+   ```
+
+## Core Modules Explained
+
+### PrologLexer.hs  
+Tokenizes source input into identifiers, symbols, punctuation, variables, etc.
+
+### PrologParser.hs  
+Transforms tokens into AST nodes: facts, rules, predicates, variables, compound terms. Also checks syntactic validity.
+
+### PatternMatch.hs  
+- `unify(term1, term2)` finds a substitution (MGU) if possible  
+- `applyMgu` applies a substitution to terms or predicates  
+- `composeMgu` merges multiple substitutions  
+
+### TopDownEval.hs  
+Implements resolution via:
+- Selecting a goal from the query
+- Matching it against facts or rule heads
+- Substituting and recursing on body goals
+- Backtracking when a branch fails
+
+The interpreter also handles variable name clashes by internally renaming variables in rules with apostrophes.
+
+## Testing
+
+- `mgutests.hs` runs unit tests for unification and MGU logic  
+- In the `tests/` directory, Prolog files along with a `queriesAndOutputs.txt` provide sample runs you can manually verify  
+- You can extend the test suite by adding more `.pl` files and corresponding expected results
+
+## Limitations & Future Work
+
+- Does not support advanced Prolog features like:
+  - Cut (`!`)
+  - Negation as failure (`\+`)
+  - Built-in predicates or arithmetic
+  - Lists and the full term unification complexity  
+- No inference optimizations (like tabling or iterative deepening)  
+- No GUI or web interface  
+- The evaluation strategy is simple depth-first; may loop on certain recursive definitions  
+- Variable scoping is rudimentary (apostrophe-based renaming), may need refinement  
+
+Possible extensions:
+- Add support for built-ins (e.g. arithmetic, comparisons)  
+- Implement `cut`, negation, or other control constructs  
+- Add a REPL with query history  
+- Implement optimizations (memoization, iterative deepening)  
+- Better error messages (syntax and runtime)  
+
+## License
+
+This project is released under the **MIT License**. See the `LICENSE` file for details.
