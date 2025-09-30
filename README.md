@@ -2,21 +2,6 @@
 
 This is a simple Prolog interpreter implemented in Haskell. It parses Prolog source files, evaluates queries via a top‑down strategy, and supports unification and backtracking.
 
-## Table of Contents
-
-1. [Overview](#overview)  
-2. [Features](#features)  
-3. [Repository Structure](#repository-structure)  
-4. [Getting Started](#getting-started)  
-   1. [Requirements](#requirements)  
-   2. [Build & Run](#build--run)  
-   3. [Usage](#usage)  
-5. [Core Modules](#core-modules)  
-6. [Testing](#testing)  
-7. [Limitations & Future Work](#limitations--future-work)  
-8. [License](#license)  
-9. [Acknowledgments](#acknowledgments)  
-
 ## Overview
 
 This interpreter reads a Prolog file containing facts and rules, accepts queries interactively (or from input), and attempts to resolve them using unification and a depth‑first top-down evaluator.  
@@ -34,25 +19,6 @@ It’s intended for educational purposes: to illustrate how Prolog evaluation wo
 - Basic handling of variable scoping (renaming of variables internally)  
 - A test suite for the unification algorithm  
 - Simple command-line interface (read file, accept queries, quit via `halt.`)  
-
-## Repository Structure
-
-```
-PrologInterpreter/
-│  
-├── LICENSE  
-├── Makefile  
-├── main.hs  
-├── PrologLexer.hs  
-├── PrologParser.hs  
-├── PatternMatch.hs  
-├── TopDownEval.hs  
-├── mgutests.hs  
-├── tests/  
-│   ├── *.pl              ← sample Prolog files  
-│   └── queriesAndOutputs.txt  
-└── README.md  
-```
 
 Brief descriptions:
 
